@@ -1,5 +1,4 @@
-// pages/api/addSchool.js
-import cloudinary from '../../lib/cloudinary';
+import cloudinary from './cloudinary';
 import pool from './db';
 import formidable from 'formidable';
 
