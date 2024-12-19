@@ -1,23 +1,21 @@
-import pool from './db';
-import multer from 'multer';
-import cloudinary from './cloudinaryConfig';
+import pool from './db'; 
+import multer from 'multer'; 
 import { v2 as cloudinaryV2 } from 'cloudinary';
 
-// Multer configuration to handle file data
-const storage = multer.memoryStorage(); // Store files in memory for upload to Cloudinary
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 export const config = {
     api: {
-        bodyParser: false, // Disable default body parser to handle file uploads manually
+        bodyParser: false,
     },
 };
 
 const handler = async (req, res) => {
     if (req.method === 'POST') {
-        // Handle form data and file upload
         upload.single('image')(req, res, async (err) => {
             if (err) {
+                console.error("Error during image upload:", err);
                 return res.status(500).json({ message: 'Error uploading image' });
             }
 
@@ -25,21 +23,24 @@ const handler = async (req, res) => {
             const file = req.file;
 
             try {
-                // Upload the image to Cloudinary
+                if (!file) {
+                    return res.status(400).json({ message: 'No image uploaded' });
+                }
+
                 const cloudinaryResponse = await cloudinaryV2.uploader.upload_stream(
                     { folder: 'school_images' },
                     async (error, result) => {
                         if (error) {
+                            console.error("Cloudinary upload error:", error);
                             return res.status(500).json({ message: 'Error uploading to Cloudinary' });
                         }
 
                         const imageUrl = result.secure_url;
 
-                        // Save the school data with the Cloudinary image URL
                         const query = 'INSERT INTO schools (name, address, city, state, contact, email_id, image) VALUES (?, ?, ?, ?, ?, ?, ?)';
                         pool.query(query, [name, address, city, state, contact, email_id, imageUrl], (dbError, dbResults) => {
                             if (dbError) {
-                                console.error(dbError);
+                                console.error("Database error:", dbError);
                                 return res.status(500).json({ message: 'Database error' });
                             }
                             return res.status(200).json({ message: 'School added successfully!' });
@@ -47,10 +48,10 @@ const handler = async (req, res) => {
                     }
                 );
 
-                file.stream.pipe(cloudinaryResponse); // Pipe the file stream to Cloudinary
+                file.stream.pipe(cloudinaryResponse);
 
             } catch (error) {
-                console.error(error);
+                console.error("Server error:", error);
                 return res.status(500).json({ message: 'Server error' });
             }
         });
