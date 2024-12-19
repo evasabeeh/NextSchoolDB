@@ -7,10 +7,7 @@ export default function AddSchool() {
     const onSubmit = async (data) => {
         const formData = new FormData();
         Object.keys(data).forEach((key) => formData.append(key, data[key]));
-
-        if (data.image[0]) {
-            formData.append('image', data.image[0]);
-        }
+        formData.append('image', data.image[0]);
 
         try {
             const response = await axios.post('/api/addSchool', formData, {
@@ -18,7 +15,7 @@ export default function AddSchool() {
             });
             alert(response.data.message);
         } catch (err) {
-            console.error("Error during form submission:", err);
+            console.error(err);
             alert('Error submitting the form');
         }
     };
@@ -92,6 +89,7 @@ export default function AddSchool() {
                     />
                     {errors.email_id && <p className="text-red-500 text-sm mt-1">{errors.email_id.message}</p>}
                 </div>
+
                 <div>
                     <label className="block text-gray-700">Image</label>
                     <input
@@ -112,4 +110,3 @@ export default function AddSchool() {
         </div>
     );
 }
-
